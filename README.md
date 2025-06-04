@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # social-network
 =======
 # React + TypeScript + Vite
@@ -56,3 +55,4 @@ export default tseslint.config({
 })
 ```
 >>>>>>> 9f8b938 (Intiial commit)
+
