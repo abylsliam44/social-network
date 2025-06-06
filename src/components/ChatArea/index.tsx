@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { useChat } from '@/context/ChatContext'
 import { askHuggingFace } from '@/api/hugging'
 import { nanoid } from 'nanoid'
+import { useQuery } from '@tanstack/react-query'
+
+const fetchDailyQuote = async (): Promise<{ body: string }> => {
+  const res = await fetch('https://jsonplaceholder.typicode.com/posts/1')
+  if (!res.ok) throw new Error('Ошибка при загрузке')
+  return res.json()
+}
 
 export default function ChatArea() {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -33,7 +40,6 @@ export default function ChatArea() {
     dispatch({ type: 'ADD_MESSAGE', payload: userMsg })
     setInput('')
 
-    // если это чат с AI — ответить
     if (activeChat.isAI) {
       const aiText = await askHuggingFace(text)
       const aiMsg = {
@@ -47,6 +53,11 @@ export default function ChatArea() {
     }
   }
 
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['quote'],
+    queryFn: fetchDailyQuote,
+  })
+
   if (!activeChat) {
     return (
       <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -58,10 +69,19 @@ export default function ChatArea() {
   return (
     <section className="flex flex-col bg-bg h-full">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center">
-        <h2 className="font-medium">{activeChat.title}</h2>
-        {activeChat.isAI && (
-          <span className="ml-2 text-sm text-primary font-semibold">🤖 AI</span>
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <h2 className="font-medium">{activeChat.title}</h2>
+          {activeChat.isAI && (
+            <span className="ml-2 text-sm text-primary font-semibold">🤖 AI</span>
+          )}
+        </div>
+        {isLoading ? (
+          <span className="text-xs text-gray-400">Загрузка цитаты...</span>
+        ) : error ? (
+          <span className="text-xs text-red-400">Ошибка</span>
+        ) : (
+          <span className="text-xs text-gray-500 italic">💬 {data?.body.slice(0, 40)}...</span>
         )}
       </div>
 
